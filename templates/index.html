@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Profile Extractor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --container-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border-color: #334155;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+
+        .btn-extract {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .btn-extract:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-extract:active {
+            transform: scale(0.98);
+        }
+
+        .btn-extract:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+            display: none;
+        }
+
+        .result-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--success);
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .data-item {
+            background-color: rgba(15, 23, 42, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .data-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .data-value {
+            font-weight: 600;
+            word-break: break-word;
+            color: var(--text-main);
+        }
+        
+        .notification {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .notification.success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .notification.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Profile Extractor</h1>
+        <p class="subtitle">Powered by Google Gemini. Extract structured data from unstructured text.</p>
+
+        <div class="input-group">
+            <label for="profileInput">Paste Profile Text</label>
+            <textarea id="profileInput" placeholder="E.g. Meet John Doe, a 30-year-old Senior Software Engineer based in San Francisco. He excels in Python, JavaScript, and Cloud Architecture..."></textarea>
+        </div>
+
+        <button id="extractBtn" class="btn-extract">
+            <div class="spinner" id="spinner"></div>
+            <span id="btnText">Extract Information</span>
+        </button>
+
+        <div id="notification" class="notification"></div>
+
+        <div id="resultContainer" class="result-container">
+            <div class="result-title">Extraction Successful! Saved to CSV.</div>
+            <div class="data-grid" id="dataGrid">
+                <!-- Data will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('extractBtn').addEventListener('click', async () => {
+            const profileText = document.getElementById('profileInput').value.trim();
+            const btn = document.getElementById('extractBtn');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+            const notification = document.getElementById('notification');
+            const resultContainer = document.getElementById('resultContainer');
+            const dataGrid = document.getElementById('dataGrid');
+
+            if (!profileText) {
+                showNotification('error', 'Please enter some profile text to extract.');
+                return;
+            }
+
+            // Reset UI
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            btnText.textContent = 'Extracting...';
+            notification.style.display = 'none';
+            resultContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ profile_text: profileText })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showNotification('success', 'Data extracted and appended to output.csv');
+                    displayResults(data.extracted_data);
+                } else {
+                    showNotification('error', data.error || 'Failed to extract data.');
+                }
+            } catch (error) {
+                showNotification('error', 'An error occurred during extraction.');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Extract Information';
+            }
+        });
+
+        function showNotification(type, message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+        }
+
+        function displayResults(data) {
+            const dataGrid = document.getElementById('dataGrid');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            dataGrid.innerHTML = ''; // Clear previous
+
+            const order = ["Name", "Age", "Profession", "Skills", "Location", "Other Notes"];
+
+            order.forEach(key => {
+                const value = data[key] || '-';
+                const itemHtml = `
+                    <div class="data-item">
+                        <div class="data-label">${key}</div>
+                        <div class="data-value">${value}</div>
+                    </div>
+                `;
+                dataGrid.innerHTML += itemHtml;
+            });
+
+            resultContainer.style.display = 'block';
+            
+            // clear the text area after successful extraction
+            document.getElementById('profileInput').value = '';
+        }
+    </script>
+
+</body>
+</html>
